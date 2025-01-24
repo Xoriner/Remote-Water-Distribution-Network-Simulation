@@ -1,4 +1,4 @@
-package pl.edu.pwr.mrodak.jp;
+package pl.edu.pwr.mrodak.jp.components;
 
 import interfaces.IControlCenter;
 import interfaces.IRetensionBasin;
@@ -32,8 +32,9 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
             // Display the hostname and IP address
             System.out.println("Hostname: " + inetAddress.getHostName());
             System.out.println("IP Address: " + inetAddress.getHostAddress());
+
             //IControlCenter ic = (IControlCenter) UnicastRemoteObject.exportObject(cc,0);
-            Registry registry = LocateRegistry.getRegistry("localhost",2000);
+            Registry registry = LocateRegistry.getRegistry("192.168.10.156",2000); //TO-DO parametry Tailor host i port
             ITailor it = (ITailor) registry.lookup("Tailor");
             //it.register(ic, "Kontroler1");
             it.register(cc,"Kontroler1");

@@ -1,4 +1,4 @@
-package pl.edu.pwr.mrodak.jp;
+package pl.edu.pwr.mrodak.jp.tailor;
 
 import interfaces.IControlCenter;
 import interfaces.ITailor;
@@ -10,11 +10,26 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Tailor implements ITailor {
-    Map<String,Remote> ccmap = new HashMap<>();
+    private String host;
+    private int port;
+    Map<String,Remote> controlCenterMap = new HashMap<>();
+
+    public Tailor(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    protected void startTailor() {
+        try {
+            ITailor it = (ITailor) UnicastRemoteObject.exportObject(this,0);
+            Registry registry = LocateRegistry.createRegistry(port);
+            registry.rebind("Tailor", it);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public boolean register(Remote r, String name) throws RemoteException {
@@ -33,10 +48,9 @@ public class Tailor implements ITailor {
         czyli zamiast name można byłoby użyć wyciągnięty ciąg znaków host:port
         ale to byłoby mało czytelne
         */
-
         if(r instanceof IControlCenter) {
-            if(!ccmap.containsKey(name)) {
-                ccmap.put(name,r);
+            if(!controlCenterMap.containsKey(name)) {
+                controlCenterMap.put(name,r);
                 System.out.println("registration of control center named: " + name);
                 ((IControlCenter) r).assignRetensionBasin(null, "nothing");
                 return true;
@@ -51,14 +65,6 @@ public class Tailor implements ITailor {
     public boolean unregister(Remote r) throws RemoteException {
         return false;
     }
-    public static void main(String[] args) {
-        Tailor tailor = new Tailor();
-        try {
-            ITailor it = (ITailor) UnicastRemoteObject.exportObject(tailor,0);
-            Registry r = LocateRegistry.createRegistry(2000);
-            r.rebind("Tailor", it);
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
-        }
-    }
+
+
 }
