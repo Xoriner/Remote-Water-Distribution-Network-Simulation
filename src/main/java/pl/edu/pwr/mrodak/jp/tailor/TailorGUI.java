@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class TailorGUI extends JFrame {
+    private JTextField tailorNameField;
     private JTextField TailorHostField;
     private JTextField TailorPortField;
 
@@ -26,9 +27,17 @@ public class TailorGUI extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Tailor Host input
+        // Tailor Name input
         gbc.gridx = 0;
         gbc.gridy = 0;
+        add(new JLabel("Tailor Name:"), gbc);
+        gbc.gridx = 1;
+        tailorNameField = new JTextField("Tailor");
+        add(tailorNameField, gbc);
+
+        // Tailor Host input
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         add(new JLabel("Tailor Host:"), gbc);
         gbc.gridx = 1;
         TailorHostField = new JTextField(ipAddress);
@@ -36,7 +45,7 @@ public class TailorGUI extends JFrame {
 
         // Tailor Port input
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         add(new JLabel("Tailor Port:"), gbc);
         gbc.gridx = 1;
         TailorPortField = new JTextField("2000");
@@ -44,7 +53,7 @@ public class TailorGUI extends JFrame {
 
         // Start button
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         gbc.gridwidth = 2;
         JButton startButton = new JButton("Start Tailor");
         startButton.addActionListener(e -> startTailor());
@@ -52,9 +61,10 @@ public class TailorGUI extends JFrame {
     }
 
     private void startTailor() {
+        String name = tailorNameField.getText();
         String host = TailorHostField.getText();
         int port = Integer.parseInt(TailorPortField.getText());
-        Tailor tailor = new Tailor(host, port);
+        Tailor tailor = new Tailor(name, host, port);
         tailor.startTailor();
     }
 

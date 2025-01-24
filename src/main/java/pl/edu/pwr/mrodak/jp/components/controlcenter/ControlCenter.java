@@ -1,4 +1,4 @@
-package pl.edu.pwr.mrodak.jp.components;
+package pl.edu.pwr.mrodak.jp.components.controlcenter;
 
 import interfaces.IControlCenter;
 import interfaces.IRetensionBasin;
@@ -25,7 +25,10 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
     public static void main(String[] args) {
         try {
             IControlCenter controlCenter = new ControlCenter();
+
+            //extends UnicastRemoteObject so it is not necessary to export it
             //IControlCenter ic = (IControlCenter) UnicastRemoteObject.exportObject(controlCenter,0);
+
             Registry registry = LocateRegistry.getRegistry("192.168.10.156",2000);
             ITailor it = (ITailor) registry.lookup("Tailor");
             it.register(controlCenter,"ControlCenter1");

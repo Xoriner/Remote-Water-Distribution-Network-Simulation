@@ -1,6 +1,7 @@
 package pl.edu.pwr.mrodak.jp.tailor;
 
 import interfaces.IControlCenter;
+import interfaces.IRetensionBasin;
 import interfaces.ITailor;
 
 import java.rmi.Remote;
@@ -12,11 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Tailor implements ITailor {
+    private String name;
     private String host;
     private int port;
     Map<String,Remote> controlCenterMap = new HashMap<>();
 
-    public Tailor(String host, int port) {
+    public Tailor(String name, String host, int port) {
+        this.name = name;
         this.host = host;
         this.port = port;
     }
@@ -30,14 +33,14 @@ public class Tailor implements ITailor {
             Registry registry = LocateRegistry.createRegistry(port);
 
             // Bind the remote object's stub in the registry
-            registry.rebind("Tailor", it);
+            registry.rebind(name, it);
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public boolean register(Remote r, String name) throws RemoteException {
+    public boolean register(Remote remoteStub, String name) throws RemoteException {
         /*
         // informację na temat tego na jakim hoście i porcie rzeczywiście działa namiastka
         // chyba najłatwiej uzyskać parsując wynik metody toString()
@@ -45,7 +48,7 @@ public class Tailor implements ITailor {
         // Proxy[IControlCenter,RemoteObjectInvocationHandler[UnicastRef [liveRef: [endpoint:[192.168.1.153:3000](remote),objID:[-50fb9f25:1945c684c6d:-7fff, 7487353482432237380]]]]]
         // wystarczy więc wyciągnąć z niego podciąg korzystając z regexp
         Pattern pattern = Pattern.compile(".*endpoint:\\[(.*)\\]\\(remote.*");
-        Matcher matcher = pattern.matcher(r.toString());
+        Matcher matcher = pattern.matcher(remoteStub.toString());
         if (matcher.find())
         {
             System.out.println(matcher.group(1)); //
@@ -53,11 +56,11 @@ public class Tailor implements ITailor {
         czyli zamiast name można byłoby użyć wyciągnięty ciąg znaków host:port
         ale to byłoby mało czytelne
         */
-        if(r instanceof IControlCenter) {
+        if(remoteStub instanceof IControlCenter) {
             if(!controlCenterMap.containsKey(name)) {
-                controlCenterMap.put(name,r);
+                controlCenterMap.put(name,remoteStub);
                 System.out.println("registration of control center named: " + name);
-                ((IControlCenter) r).assignRetensionBasin(null, "nothing");
+                ((IControlCenter) remoteStub).assignRetensionBasin(null, "nothing");
                 return true;
             }
             else return false;
