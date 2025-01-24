@@ -60,6 +60,7 @@ public class Tailor implements ITailor {
             if(!controlCenterMap.containsKey(name)) {
                 controlCenterMap.put(name,remoteStub);
                 System.out.println("registration of control center named: " + name);
+                //Szycie połączenia, musi być gdzie indziej
                 ((IControlCenter) remoteStub).assignRetensionBasin(null, "nothing");
                 return true;
             }
