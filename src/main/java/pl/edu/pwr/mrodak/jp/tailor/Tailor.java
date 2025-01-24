@@ -23,8 +23,13 @@ public class Tailor implements ITailor {
 
     protected void startTailor() {
         try {
+            // Create remote object and export it to receive incoming method calls
             ITailor it = (ITailor) UnicastRemoteObject.exportObject(this,0);
+
+            // Create Registry on port
             Registry registry = LocateRegistry.createRegistry(port);
+
+            // Bind the remote object's stub in the registry
             registry.rebind("Tailor", it);
         } catch (RemoteException e) {
             throw new RuntimeException(e);

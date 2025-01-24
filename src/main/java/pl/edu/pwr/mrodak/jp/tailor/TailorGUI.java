@@ -19,15 +19,7 @@ public class TailorGUI extends JFrame {
     }
 
     private void initializeUI() {
-        InetAddress inetAddress = null;
-        try {
-            inetAddress = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.println("IP Address: " + inetAddress.getHostAddress());
-
+        String ipAddress = getIpAddress();
 
         // GridBagLayout constraints
         GridBagConstraints gbc = new GridBagConstraints();
@@ -39,7 +31,7 @@ public class TailorGUI extends JFrame {
         gbc.gridy = 0;
         add(new JLabel("Tailor Host:"), gbc);
         gbc.gridx = 1;
-        TailorHostField = new JTextField("localhost");
+        TailorHostField = new JTextField(ipAddress);
         add(TailorHostField, gbc);
 
         // Tailor Port input
@@ -64,6 +56,16 @@ public class TailorGUI extends JFrame {
         int port = Integer.parseInt(TailorPortField.getText());
         Tailor tailor = new Tailor(host, port);
         tailor.startTailor();
+    }
+
+    private String getIpAddress() {
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+        return inetAddress.getHostAddress();
     }
 
     public static void main(String[] args) {

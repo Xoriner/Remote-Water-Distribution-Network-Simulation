@@ -4,8 +4,6 @@ import interfaces.IControlCenter;
 import interfaces.IRetensionBasin;
 import interfaces.ITailor;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -26,19 +24,12 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
 
     public static void main(String[] args) {
         try {
-            IControlCenter cc = new ControlCenter();
-            InetAddress inetAddress = InetAddress.getLocalHost();
-
-            // Display the hostname and IP address
-            System.out.println("Hostname: " + inetAddress.getHostName());
-            System.out.println("IP Address: " + inetAddress.getHostAddress());
-
-            //IControlCenter ic = (IControlCenter) UnicastRemoteObject.exportObject(cc,0);
-            Registry registry = LocateRegistry.getRegistry("192.168.10.156",2000); //TO-DO parametry Tailor host i port
+            IControlCenter controlCenter = new ControlCenter();
+            //IControlCenter ic = (IControlCenter) UnicastRemoteObject.exportObject(controlCenter,0);
+            Registry registry = LocateRegistry.getRegistry("192.168.10.156",2000);
             ITailor it = (ITailor) registry.lookup("Tailor");
-            //it.register(ic, "Kontroler1");
-            it.register(cc,"Kontroler1");
-        } catch (RemoteException | NotBoundException | UnknownHostException e) {
+            it.register(controlCenter,"ControlCenter1");
+        } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
         }
 
