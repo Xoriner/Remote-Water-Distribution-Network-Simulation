@@ -45,6 +45,10 @@ public class Tailor implements ITailor {
         }
     }
 
+    public Remote findComponent(String name) throws RemoteException {
+        return componentMap.get(name);
+    }
+
     @Override
     public boolean register(Remote remoteStub, String name) throws RemoteException {
         /*

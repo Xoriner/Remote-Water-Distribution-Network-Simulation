@@ -18,7 +18,7 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
     private String tailorHost;
     private int tailorPort;
 
-    private Map<Integer, String> retensionBasins = new ConcurrentHashMap<>();
+    private Map<IRetensionBasin, String> retensionBasins = new ConcurrentHashMap<>();
 
     protected ControlCenter(String controlCenterName, String tailorName, String tailorHost, int tailorPort) throws RemoteException {
         this.name = controlCenterName;
@@ -29,11 +29,13 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
 
     @Override
     public void assignRetensionBasin(IRetensionBasin irb, String name) {
-        if(irb == null) {
+        //TODO: Check if irb is null or if it is already in the map
+        if(irb == null || retensionBasins.containsValue(name)) {
             System.out.println("got null");
         }
         else {
-
+            retensionBasins.put(irb, name);
+            System.out.println("Assigned retension basin: " + name);
             System.out.println(irb.toString());
         }
     }
