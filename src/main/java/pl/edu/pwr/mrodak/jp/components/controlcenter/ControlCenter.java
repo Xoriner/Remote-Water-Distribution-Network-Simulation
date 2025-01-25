@@ -11,7 +11,16 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class ControlCenter extends UnicastRemoteObject implements IControlCenter {
-    protected ControlCenter() throws RemoteException {
+    private String name;
+    private String tailorName;
+    private String tailorHost;
+    private int tailorPort;
+
+    protected ControlCenter(String controlCenterName, String tailorName, String tailorHost, int tailorPort) throws RemoteException {
+        this.name = controlCenterName;
+        this.tailorName = tailorName;
+        this.tailorHost = tailorHost;
+        this.tailorPort = tailorPort;
     }
 
     @Override
@@ -22,19 +31,33 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
             System.out.println(irb.toString());
     }
 
-    public static void main(String[] args) {
+    protected void startControlCenter() {
         try {
-            IControlCenter controlCenter = new ControlCenter();
-
             //extends UnicastRemoteObject so it is not necessary to export it
             //IControlCenter ic = (IControlCenter) UnicastRemoteObject.exportObject(controlCenter,0);
 
-            Registry registry = LocateRegistry.getRegistry("192.168.10.156",2000);
-            ITailor it = (ITailor) registry.lookup("Tailor");
-            it.register(controlCenter,"ControlCenter1");
+            Registry registry = LocateRegistry.getRegistry(tailorHost,tailorPort);
+            ITailor it = (ITailor) registry.lookup(tailorName);
+
+            if (it.register(this, name)) {
+                System.out.println("Registered with Tailor");
+            } else {
+                System.out.println("Failed to register with Tailor");
+            }
+
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    //TODO: Implement this method
+    public void contactRetensionBasinToSetWaterDischarge(String retensionBasinName, int waterDischarge) {
+        try {
+            Registry registry = LocateRegistry.getRegistry(tailorHost,tailorPort);
+            ITailor it = (ITailor) registry.lookup(tailorName);
+            //it.setWaterDischarge(retensionBasinName, waterDischarge);
+        } catch (RemoteException | NotBoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

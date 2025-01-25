@@ -1,8 +1,6 @@
 package pl.edu.pwr.mrodak.jp.tailor;
 
-import interfaces.IControlCenter;
-import interfaces.IRetensionBasin;
-import interfaces.ITailor;
+import interfaces.*;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -16,7 +14,15 @@ public class Tailor implements ITailor {
     private String name;
     private String host;
     private int port;
-    Map<String,Remote> controlCenterMap = new HashMap<>();
+
+    //map for general remote use of component
+    private Map<String, Remote> componentMap = new HashMap<>();
+
+    //maps for specific use of components
+    private Map<String, IControlCenter> controlCenterMap = new HashMap<>();
+    private Map<String, IEnvironment> environmentMap = new HashMap<>();
+    private Map<String, IRetensionBasin> retensionBasinMap = new HashMap<>();
+    private Map<String, IRiverSection> riverSectionMap = new HashMap<>();
 
     public Tailor(String name, String host, int port) {
         this.name = name;
@@ -56,20 +62,39 @@ public class Tailor implements ITailor {
         czyli zamiast name można byłoby użyć wyciągnięty ciąg znaków host:port
         ale to byłoby mało czytelne
         */
-        if(remoteStub instanceof IControlCenter) {
-            if(!controlCenterMap.containsKey(name)) {
-                controlCenterMap.put(name,remoteStub);
-                System.out.println("registration of control center named: " + name);
-                //Szycie połączenia, musi być gdzie indziej
-                ((IControlCenter) remoteStub).assignRetensionBasin(null, "nothing");
-                return true;
-            }
-            else return false;
+        if (componentMap.containsKey(name)) {
+            System.out.println(new StringBuilder().append("duplicate name: ").append(name));
+            return false; // Avoid duplicate names
         }
 
-        return false;
+        // specific registration
+        switch (remoteStub) {
+            case IControlCenter controlCenter -> controlCenterMap.put(name, controlCenter);
+            case IEnvironment environment -> environmentMap.put(name, environment);
+            case IRetensionBasin retensionBasin -> retensionBasinMap.put(name, retensionBasin);
+            case IRiverSection riverSection -> riverSectionMap.put(name, riverSection);
+            case null, default -> {
+                System.out.println(new StringBuilder().append("unrecognized type: ").append(name));
+                return false; // Unrecognized type
+            }
+        }
+
+        // general registration
+        componentMap.put(name, remoteStub);
+
+        /*if(remoteStub instanceof IControlCenter) {
+            controlCenterMap.put(name, (IControlCenter) remoteStub);
+            System.out.println("registration of control center named: " + name);
+            //Szycie połączenia, musi być gdzie indziej
+            ((IControlCenter) remoteStub).assignRetensionBasin(null, "nothing");
+            return true;
+        }*/
+
+        System.out.println(new StringBuilder().append("registration of ").append(name).append(" successful"));
+        return true;
     }
 
+    //TODO: Implement this method
     @Override
     public boolean unregister(Remote r) throws RemoteException {
         return false;
