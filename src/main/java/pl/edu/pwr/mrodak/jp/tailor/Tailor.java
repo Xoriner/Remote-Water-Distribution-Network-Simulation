@@ -100,5 +100,7 @@ public class Tailor implements ITailor {
         return false;
     }
 
-
+    public Map<String, Remote> getComponentMap() {
+        return componentMap;
+    }
 }

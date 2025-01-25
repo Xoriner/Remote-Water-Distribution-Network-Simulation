@@ -4,11 +4,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.rmi.Remote;
+import java.util.Map;
 
 public class TailorGUI extends JFrame {
     private JTextField tailorNameField;
     private JTextField TailorHostField;
     private JTextField TailorPortField;
+
+    private DefaultListModel<String> componentListModel;
+    private JList<String> componentList;
+
+    private Tailor tailor;
 
     public TailorGUI() {
         setTitle("Tailor");
@@ -58,13 +65,35 @@ public class TailorGUI extends JFrame {
         JButton startButton = new JButton("Start Tailor");
         startButton.addActionListener(e -> startTailor());
         add(startButton, gbc);
+
+        // Component list
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        add(new JLabel("Registered Components:"), gbc);
+
+        componentListModel = new DefaultListModel<>();
+        componentList = new JList<>(componentListModel);
+        JScrollPane scrollPane = new JScrollPane(componentList);
+        gbc.gridy = 5;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        add(scrollPane, gbc);
+
+        // Refresh button
+        gbc.gridy = 6;
+        gbc.weighty = 0;
+        JButton refreshButton = new JButton("Refresh Component List");
+        refreshButton.addActionListener(e -> refreshComponentList());
+        add(refreshButton, gbc);
     }
 
     private void startTailor() {
         String name = tailorNameField.getText();
         String host = TailorHostField.getText();
         int port = Integer.parseInt(TailorPortField.getText());
-        Tailor tailor = new Tailor(name, host, port);
+        tailor = new Tailor(name, host, port);
         tailor.startTailor();
     }
 
@@ -76,6 +105,30 @@ public class TailorGUI extends JFrame {
             throw new RuntimeException(e);
         }
         return inetAddress.getHostAddress();
+    }
+
+    private void refreshComponentList() {
+        if (tailor == null) {
+            JOptionPane.showMessageDialog(this, "Tailor is not running.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            // Get the component map from the Tailor instance
+            Map<String, Remote> components = tailor.getComponentMap();
+
+            // Update the component list in the GUI
+            componentListModel.clear();
+            for (Map.Entry<String, Remote> entry : components.entrySet()) {
+                String name = entry.getKey();
+                //TODO: Consider not using type name
+                String type = entry.getValue().getClass().getSimpleName(); // Get the class name of the remote object
+                componentListModel.addElement(name + " (" + type + ")");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error refreshing component list: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public static void main(String[] args) {

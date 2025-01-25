@@ -119,8 +119,6 @@ public class ControlCenterGUI extends JFrame {
         JButton setWaterDischargeButton = new JButton("Set Water Discharge");
         setWaterDischargeButton.addActionListener(e -> setWaterDischarge());
         add(setWaterDischargeButton, gbc);
-
-
     }
 
     private void startControlCenter() throws RemoteException {

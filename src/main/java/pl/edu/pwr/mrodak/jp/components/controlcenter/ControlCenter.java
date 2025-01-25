@@ -9,12 +9,16 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ControlCenter extends UnicastRemoteObject implements IControlCenter {
     private String name;
     private String tailorName;
     private String tailorHost;
     private int tailorPort;
+
+    private Map<Integer, String> retensionBasins = new ConcurrentHashMap<>();
 
     protected ControlCenter(String controlCenterName, String tailorName, String tailorHost, int tailorPort) throws RemoteException {
         this.name = controlCenterName;
@@ -25,14 +29,18 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
 
     @Override
     public void assignRetensionBasin(IRetensionBasin irb, String name) {
-        if(irb == null)
+        if(irb == null) {
             System.out.println("got null");
-        else
+        }
+        else {
+
             System.out.println(irb.toString());
+        }
     }
 
     protected void startControlCenter() {
         try {
+            //TODO: Consider using exportObject instead of extending UnicastRemoteObject
             //extends UnicastRemoteObject so it is not necessary to export it
             //IControlCenter ic = (IControlCenter) UnicastRemoteObject.exportObject(controlCenter,0);
 
