@@ -15,9 +15,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
 public class RetensionBasin extends Observable implements IRetensionBasin {
     private int maxVolume;
@@ -35,7 +33,7 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
 
     private List<String> incomingRiverSectionName = new ArrayList<String>();
     private String outgoingRiverSectionName;
-    private ConcurrentMap<Integer, Integer> inflows = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, Integer> inflows = new ConcurrentHashMap<>();
 
     protected RetensionBasin(String name, String tailorName, String tailorHost, int tailorPort, int maxVolume, String controlCenterName) throws RemoteException {
         this.retensionBasinName = name;
@@ -44,6 +42,7 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
         this.tailorPort = tailorPort;
         this.maxVolume = maxVolume;
         this.controlCenterName = controlCenterName;
+        scheduler = Executors.newScheduledThreadPool(1);
     }
 
     //getWaterDischarge called by ControlCenter
@@ -67,7 +66,22 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
     //setWaterInflow called by RiverSection
     @Override
     public void setWaterInflow(int i, String s) throws RemoteException {
+        if(incomingRiverSectionName.contains(s)) {
+            inflows.put(s, i);
+            updateCurrentVolume();
+        }
+    }
 
+    private void updateCurrentVolume() {
+        int totalInflow = inflows.values().stream().mapToInt(Integer::intValue).sum();
+        currentVolume += totalInflow - waterDischarge;
+        if (currentVolume > maxVolume) {
+            currentVolume = maxVolume;
+            waterDischarge = totalInflow;
+        } else if (currentVolume < 0) {
+            currentVolume = 0;
+        }
+        System.out.println("Current volume: " + currentVolume);
     }
 
     //output RiverSection
@@ -83,11 +97,13 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
             ITailor it = (ITailor) registry.lookup(tailorName);
 
             if (((IComponentGetter) it).registerAndAssignRetensionBasinToControlCenter(irb, retensionBasinName, controlCenterName)) {
-                System.out.println("Registered and assigned with Tailor");
+                System.out.println("Registered with Tailor and assigned with Control Center");
             } else {
-                System.out.println("Failed to register and assign with Tailor");
+                System.out.println("Failed to register with Tailor or assign with Control Center");
             }
 
+            //monitorOutgoingRiverSection();
+            scheduler.scheduleAtFixedRate(this::updateCurrentVolume, 0, 3, TimeUnit.SECONDS);
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
         }

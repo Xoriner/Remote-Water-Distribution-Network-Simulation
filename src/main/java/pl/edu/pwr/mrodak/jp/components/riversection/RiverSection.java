@@ -55,14 +55,36 @@ public class RiverSection extends Observable implements IRiverSection {
             if (((IComponentGetter) it).registerAndAssignRiverSectionToEnvironment(irs, riverSectionName, environmentName)) {
                 System.out.println("Registered and assigned with Tailor");
             } else {
-                System.out.println("Failed to register and assign with Tailor");
+                System.out.println("Failed to register with Tailor or assign with Environment");
             }
             monitorOutputRetentionBasin();
-            //scheduler.scheduleAtFixedRate(this::calculateAndSendWaterInflow, 0, delay, TimeUnit.MILLISECONDS);
+            scheduler.scheduleAtFixedRate(this::calculateAndSendWaterInflow, 0, delay, TimeUnit.MILLISECONDS);
             //registerWithInputRetentionBasin();
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void calculateAndSendWaterInflow() {
+        int waterInflow = calculateWaterInflow();
+        sendWaterInflowToOutputBasin(waterInflow);
+    }
+
+    private void sendWaterInflowToOutputBasin(int waterInflow) {
+        if (outputRetensionBasin != null) {
+            try {
+                outputRetensionBasin.setWaterInflow(waterInflow, riverSectionName);
+                System.out.println("Water inflow sent to output basin: " + waterInflow);
+            } catch (RemoteException e) {
+                throw new RuntimeException("Failed to send water inflow to output basin", e);
+            }
+        } else {
+            System.err.println("Output Retension Basin is not assigned.");
+        }
+    }
+
+    private int calculateWaterInflow() {
+        return rainFall + realDischarge;
     }
 
     public void monitorOutputRetentionBasin() {
