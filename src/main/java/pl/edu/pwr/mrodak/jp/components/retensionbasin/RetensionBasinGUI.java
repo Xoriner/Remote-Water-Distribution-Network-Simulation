@@ -1,5 +1,7 @@
 package pl.edu.pwr.mrodak.jp.components.retensionbasin;
 
+import pl.edu.pwr.mrodak.jp.components.observer.Observer;
+
 import javax.swing.*;
 import java.awt.*;
 import java.rmi.RemoteException;
@@ -9,7 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class RetensionBasinGUI extends JFrame {
+public class RetensionBasinGUI extends JFrame implements Observer {
     private JTextField retensionBasinName;
 
     private JTextField tailorNameField;
@@ -122,14 +124,28 @@ public class RetensionBasinGUI extends JFrame {
         generateInputsButton.addActionListener(e -> generateIncomingRiverSectionInputs(gbc));
         add(generateInputsButton, gbc);
 
-        // Retension Basin Info
+        //Output River Section
         gbc.gridx = 0;
         gbc.gridy = 9;
+        add(new JLabel("Output RiverSection:"), gbc);
+
+        // Output River Section Name Label
+        gbc.gridx = 0;
+        gbc.gridy = 10;
+        gbc.gridwidth = 1;
+        add(new JLabel("Output River Section Name:"), gbc);
+        gbc.gridx = 1;
+        outputRiverSectionNameLabel = new JLabel("N/A");
+        add(outputRiverSectionNameLabel, gbc);
+
+        // Retension Basin Info
+        gbc.gridx = 0;
+        gbc.gridy = 11;
         add(new JLabel("Retension Basin Info:"), gbc);
 
         // Filling Percentage Label
         gbc.gridx = 0;
-        gbc.gridy = 10;
+        gbc.gridy = 12;
         gbc.gridwidth = 1;
         add(new JLabel("Filling Percentage:"), gbc);
         gbc.gridx = 1;
@@ -138,7 +154,7 @@ public class RetensionBasinGUI extends JFrame {
 
         // Water Discharge Label
         gbc.gridx = 0;
-        gbc.gridy = 11;
+        gbc.gridy = 13;
         add(new JLabel("Water Discharge:"), gbc);
         gbc.gridx = 1;
         waterDischargeLabel = new JLabel("N/A");
@@ -154,6 +170,7 @@ public class RetensionBasinGUI extends JFrame {
         String controlCenterName = controlCenterNameInput.getText();
         retensionBasin = new RetensionBasin(name, tailorName, tailorHost, tailorPort, maxVolume, controlCenterName);
         retensionBasin.startRetensionBasin();
+        retensionBasin.addObserver(this);
         updateLabels();
     }
 
@@ -223,5 +240,12 @@ public class RetensionBasinGUI extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(RetensionBasinGUI::new);
+    }
+
+    @Override
+    public void update(String name, String stringInfo, int intInfo) {
+        SwingUtilities.invokeLater(() -> {
+            outputRiverSectionNameLabel.setText(name);
+        });
     }
 }

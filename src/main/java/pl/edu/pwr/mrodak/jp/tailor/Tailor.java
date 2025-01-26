@@ -1,7 +1,6 @@
 package pl.edu.pwr.mrodak.jp.tailor;
 
 import interfaces.*;
-import pl.edu.pwr.mrodak.jp.components.controlcenter.ControlCenter;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -75,6 +74,18 @@ public class Tailor implements ITailor, IComponentGetter {
             return true;
         } else {
             System.out.println("River section not found or invalid type: " + riverName);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean assignRiverSectionToRetensionBasin(Remote remoteStub, String componentName, String retensionBasinName) throws RemoteException {
+        IRetensionBasin retensionBasin = retensionBasinMap.get(retensionBasinName);
+        if (retensionBasin != null) {
+            retensionBasin.assignRiverSection((IRiverSection) remoteStub, componentName);
+            return true;
+        } else {
+            System.out.println("Retension basin not found or invalid type: " + retensionBasinName);
             return false;
         }
     }

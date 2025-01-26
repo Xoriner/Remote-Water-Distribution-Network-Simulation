@@ -59,7 +59,22 @@ public class RiverSection extends Observable implements IRiverSection {
             }
             monitorOutputRetentionBasin();
             scheduler.scheduleAtFixedRate(this::calculateAndSendWaterInflow, 0, delay, TimeUnit.MILLISECONDS);
-            //registerWithInputRetentionBasin();
+            registerWithInputRetentionBasin();
+        } catch (RemoteException | NotBoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void registerWithInputRetentionBasin() {
+        try {
+            Registry registry = LocateRegistry.getRegistry(tailorHost, tailorPort);
+            ITailor it = (ITailor) registry.lookup(tailorName);
+
+            if (((IComponentGetter) it).assignRiverSectionToRetensionBasin(this, riverSectionName, inputBasinName)) {
+                System.out.println("Assigned with Input Retension Basin");
+            } else {
+                System.out.println("Failed to assign with Input Retension Basin");
+            }
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
         }

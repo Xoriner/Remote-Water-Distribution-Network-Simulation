@@ -7,6 +7,7 @@ import interfaces.ITailor;
 import pl.edu.pwr.mrodak.jp.components.observer.Observable;
 import pl.edu.pwr.mrodak.jp.tailor.IComponentGetter;
 
+import javax.swing.*;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -32,8 +33,11 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
     private ScheduledExecutorService scheduler;
 
     private List<String> incomingRiverSectionName = new ArrayList<String>();
-    private String outgoingRiverSectionName;
     private ConcurrentMap<String, Integer> inflows = new ConcurrentHashMap<>();
+
+    private String outgoingRiverSectionName;
+    private IRiverSection outgoingRiverSection;
+
 
     protected RetensionBasin(String name, String tailorName, String tailorHost, int tailorPort, int maxVolume, String controlCenterName) throws RemoteException {
         this.retensionBasinName = name;
@@ -61,6 +65,15 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
     @Override
     public void setWaterDischarge(int i) throws RemoteException {
         this.waterDischarge = i;
+        sendWaterDischargeToOutgoingRiverSection();
+    }
+
+    private void sendWaterDischargeToOutgoingRiverSection() {
+        try {
+            outgoingRiverSection.setRealDischarge(waterDischarge);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     //setWaterInflow called by RiverSection
@@ -78,6 +91,7 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
         if (currentVolume > maxVolume) {
             currentVolume = maxVolume;
             waterDischarge = totalInflow;
+            sendWaterDischargeToOutgoingRiverSection();
         } else if (currentVolume < 0) {
             currentVolume = 0;
         }
@@ -87,7 +101,10 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
     //output RiverSection
     @Override
     public void assignRiverSection(IRiverSection iRiverSection, String s) throws RemoteException {
-
+        this.outgoingRiverSection = iRiverSection;
+        this.outgoingRiverSectionName = s;
+        System.out.println("Assigned RiverSection: " + s);
+        notifyObservers(outgoingRiverSectionName, "", 0);
     }
 
     public void startRetensionBasin() {
@@ -102,7 +119,6 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
                 System.out.println("Failed to register with Tailor or assign with Control Center");
             }
 
-            //monitorOutgoingRiverSection();
             scheduler.scheduleAtFixedRate(this::updateCurrentVolume, 0, 3, TimeUnit.SECONDS);
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
@@ -125,9 +141,9 @@ public class RetensionBasin extends Observable implements IRetensionBasin {
                 ITailor it = (ITailor) registry.lookup(tailorName);
 
                 if (((IComponentGetter) it).assignRetensionBasinToRiverSection(this, retensionBasinName, riverName)) {
-                    System.out.println("Registered and assigned with Tailor");
+                    System.out.println("Assigned with Incoming River Section: " + riverName);
                 } else {
-                    System.out.println("Failed to register and assign with Tailor");
+                    System.out.println("Failed to assign with Incoming River Section: " + riverName);
                 }
 
             } catch (RemoteException | NotBoundException e) {

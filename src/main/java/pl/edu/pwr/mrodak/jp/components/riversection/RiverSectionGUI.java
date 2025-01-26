@@ -94,7 +94,7 @@ public class RiverSectionGUI extends JFrame implements Observer {
         gbc.gridy = 6;
         add(new JLabel("Input Basin Name:"), gbc);
         gbc.gridx = 1;
-        inputBasinNameField = new JTextField("InputBasin");
+        inputBasinNameField = new JTextField("RetensionBasin");
         add(inputBasinNameField, gbc);
 
         //Start Button
