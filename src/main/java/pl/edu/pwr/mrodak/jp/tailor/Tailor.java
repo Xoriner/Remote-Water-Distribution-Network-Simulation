@@ -1,6 +1,7 @@
 package pl.edu.pwr.mrodak.jp.tailor;
 
 import interfaces.*;
+import pl.edu.pwr.mrodak.jp.components.controlcenter.ControlCenter;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -51,14 +52,42 @@ public class Tailor implements ITailor, IComponentGetter {
     }
 
     @Override
-    public boolean registerAndAssign(Remote remoteStub, String componentName, String controlCenterName) throws RemoteException {
+    public boolean registerAndAssignRiverSectionToEnvironment(Remote remoteStub, String componentName, String environmentName) throws RemoteException {
         if (!register(remoteStub, componentName)) {
             return false;
         }
 
-        Remote controlCenter = findComponent(controlCenterName);
-        if (controlCenter instanceof IControlCenter) {
-            ((IControlCenter) controlCenter).assignRetensionBasin((IRetensionBasin) remoteStub, componentName);
+        IEnvironment environment = environmentMap.get(environmentName);
+        if (environment != null) {
+            environment.assignRiverSection((IRiverSection) remoteStub, componentName);
+            return true;
+        } else {
+            System.out.println("Environment not found or invalid type: " + environmentName);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean assignRetensionBasinToRiverSection(Remote remoteStub, String componentName, String riverName) throws RemoteException {
+        IRiverSection riverSection = riverSectionMap.get(riverName);
+        if (riverSection != null) {
+            riverSection.assignRetensionBasin((IRetensionBasin) remoteStub, componentName);
+            return true;
+        } else {
+            System.out.println("River section not found or invalid type: " + riverName);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean registerAndAssignRetensionBasinToControlCenter(Remote remoteStub, String componentName, String controlCenterName) throws RemoteException {
+        if (!register(remoteStub, componentName)) {
+            return false;
+        }
+
+        IControlCenter controlCenter = controlCenterMap.get(controlCenterName);
+        if (controlCenter != null) {
+            controlCenter.assignRetensionBasin((IRetensionBasin) remoteStub, componentName);
             return true;
         } else {
             System.out.println("Control center not found or invalid type: " + controlCenterName);

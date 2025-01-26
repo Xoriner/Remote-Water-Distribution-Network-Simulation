@@ -34,7 +34,7 @@ public class ControlCenter extends Observable implements IControlCenter {
     }
 
     @Override
-    public void assignRetensionBasin(IRetensionBasin irb, String name) {
+    public void assignRetensionBasin(IRetensionBasin irb, String name) throws RemoteException {
         //Check if irb is null or if it is already in the map
         if(irb == null || retensionBasins.containsValue(name)) {
             System.out.println("got null");

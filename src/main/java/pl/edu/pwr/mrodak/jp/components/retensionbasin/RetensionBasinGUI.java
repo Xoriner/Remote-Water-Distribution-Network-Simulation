@@ -3,6 +3,7 @@ package pl.edu.pwr.mrodak.jp.components.retensionbasin;
 import javax.swing.*;
 import java.awt.*;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,7 +22,7 @@ public class RetensionBasinGUI extends JFrame {
     private JLabel fillingPercentageLabel;
     private JLabel waterDischargeLabel;
 
-    private List<String> incomingRiverSectionsNames;
+    private List<JTextField> incomingRiverSectionsNames = new ArrayList<>();
     private JLabel outputRiverSectionNameLabel;
 
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -40,7 +41,7 @@ public class RetensionBasinGUI extends JFrame {
     private void initializeUI() {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(7, 7, 7, 7);
 
         // Retension Basin Name input
         gbc.gridx = 0;
@@ -104,7 +105,22 @@ public class RetensionBasinGUI extends JFrame {
         });
         add(startButton, gbc);
 
+        gbc.gridwidth = 1;
+        // Incoming River Section Amount Input
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        add(new JLabel("Incoming River Section Amount:"), gbc);
+        gbc.gridx = 3;
+        incomingRiverSectionAmountInput = new JTextField("1");
+        add(incomingRiverSectionAmountInput, gbc);
 
+        // Add button to generate inputs for incoming river sections
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        JButton generateInputsButton = new JButton("Generate Inputs");
+        generateInputsButton.addActionListener(e -> generateIncomingRiverSectionInputs(gbc));
+        add(generateInputsButton, gbc);
 
         // Retension Basin Info
         gbc.gridx = 0;
@@ -156,6 +172,53 @@ public class RetensionBasinGUI extends JFrame {
                 }
             }
         }, 0, 2, TimeUnit.SECONDS);
+    }
+
+    private void generateIncomingRiverSectionInputs(GridBagConstraints gbc) {
+        try {
+            int amount = Integer.parseInt(incomingRiverSectionAmountInput.getText());
+            for (int i = 0; i < amount; i++) {
+                // Reset grid constraints for each label and text field
+                gbc.gridx = 2;
+                gbc.gridy = 2 + i;
+                gbc.gridwidth = 1;
+                add(new JLabel("Incoming River Section Name " + (i + 1) + ":"), gbc);
+
+                gbc.gridx = 3;
+                JTextField riverSectionName = new JTextField("RiverSection");
+                incomingRiverSectionsNames.add(riverSectionName);
+                add(riverSectionName, gbc);
+            }
+
+            // Reset grid constraints for the button
+            gbc.gridx = 2;
+            gbc.gridy = 2 + amount;
+            gbc.gridwidth = 2;
+            JButton connectToInputRivers = new JButton("Connect to Incoming River Sections");
+            connectToInputRivers.addActionListener(e -> connectToInputRivers());
+            add(connectToInputRivers, gbc);
+
+            revalidate();
+            repaint();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Invalid amount. Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void connectToInputRivers() {
+        readIncomingRiverSectionInputs();
+        retensionBasin.assignToIncomingRiverSections();
+    }
+
+    private void readIncomingRiverSectionInputs() {
+        try {
+            for (int i = 0; i < incomingRiverSectionsNames.size(); i++) {
+                String riverName = incomingRiverSectionsNames.get(i).getText();
+                retensionBasin.addIncomingRiverSection(riverName);
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Invalid input for incoming river sections. Please check your entries.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public static void main(String[] args) {

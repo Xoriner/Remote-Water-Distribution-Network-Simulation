@@ -131,7 +131,6 @@ public class ControlCenterGUI extends JFrame implements Observer {
         controlCenter.startControlCenter();
     }
 
-    //TODO: Implement this method
     private void setWaterDischarge() {
         String retensionBasinName = retensionBasinNameField.getText();
         int waterDischarge = Integer.parseInt(waterDischargeField.getText());

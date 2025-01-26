@@ -4,6 +4,7 @@ import interfaces.IControlCenter;
 import interfaces.IRetensionBasin;
 import interfaces.IRiverSection;
 import interfaces.ITailor;
+import pl.edu.pwr.mrodak.jp.components.observer.Observable;
 import pl.edu.pwr.mrodak.jp.tailor.IComponentGetter;
 
 import java.rmi.NotBoundException;
@@ -18,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class RetensionBasin extends UnicastRemoteObject implements IRetensionBasin {
+public class RetensionBasin extends Observable implements IRetensionBasin {
     private int maxVolume;
 
     private String tailorName;
@@ -77,22 +78,45 @@ public class RetensionBasin extends UnicastRemoteObject implements IRetensionBas
 
     public void startRetensionBasin() {
         try {
+            IRetensionBasin irb = (IRetensionBasin) UnicastRemoteObject.exportObject(this, 0);
             Registry registry = LocateRegistry.getRegistry(tailorHost, tailorPort);
             ITailor it = (ITailor) registry.lookup(tailorName);
 
-            if (((IComponentGetter) it).registerAndAssign(this, retensionBasinName, controlCenterName)) {
+            if (((IComponentGetter) it).registerAndAssignRetensionBasinToControlCenter(irb, retensionBasinName, controlCenterName)) {
                 System.out.println("Registered and assigned with Tailor");
             } else {
                 System.out.println("Failed to register and assign with Tailor");
             }
 
-            //Kinda works but not ideal for encapsulation
-            /*IControlCenter ic = (IControlCenter) ((IComponentGetter) it).findComponent(controlCenterName);
-            ic.assignRetensionBasin(this, retensionBasinName);*/
-
-
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void addIncomingRiverSection(String riverName) {
+        if(incomingRiverSectionName.contains(riverName)) {
+            System.out.println("River " + riverName + " already exists");
+            return;
+        }
+        incomingRiverSectionName.add(riverName);
+        System.out.println("Added IncomingRiverSection: " + riverName);
+    }
+
+    public void assignToIncomingRiverSections() {
+        for(String riverName : incomingRiverSectionName) {
+            try {
+                Registry registry = LocateRegistry.getRegistry(tailorHost, tailorPort);
+                ITailor it = (ITailor) registry.lookup(tailorName);
+
+                if (((IComponentGetter) it).assignRetensionBasinToRiverSection(this, retensionBasinName, riverName)) {
+                    System.out.println("Registered and assigned with Tailor");
+                } else {
+                    System.out.println("Failed to register and assign with Tailor");
+                }
+
+            } catch (RemoteException | NotBoundException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
