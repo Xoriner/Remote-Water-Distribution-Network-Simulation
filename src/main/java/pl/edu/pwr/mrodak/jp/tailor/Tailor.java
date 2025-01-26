@@ -10,7 +10,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Tailor implements ITailor {
+public class Tailor implements ITailor, IComponentGetter {
     private String name;
     private String host;
     private int port;
@@ -45,8 +45,25 @@ public class Tailor implements ITailor {
         }
     }
 
+    @Override
     public Remote findComponent(String name) throws RemoteException {
         return componentMap.get(name);
+    }
+
+    @Override
+    public boolean registerAndAssign(Remote remoteStub, String componentName, String controlCenterName) throws RemoteException {
+        if (!register(remoteStub, componentName)) {
+            return false;
+        }
+
+        Remote controlCenter = findComponent(controlCenterName);
+        if (controlCenter instanceof IControlCenter) {
+            ((IControlCenter) controlCenter).assignRetensionBasin((IRetensionBasin) remoteStub, componentName);
+            return true;
+        } else {
+            System.out.println("Control center not found or invalid type: " + controlCenterName);
+            return false;
+        }
     }
 
     @Override

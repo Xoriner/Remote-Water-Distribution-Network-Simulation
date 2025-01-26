@@ -3,6 +3,7 @@ package pl.edu.pwr.mrodak.jp.components.controlcenter;
 import interfaces.IControlCenter;
 import interfaces.IRetensionBasin;
 import interfaces.ITailor;
+import pl.edu.pwr.mrodak.jp.tailor.IComponentGetter;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -63,10 +64,14 @@ public class ControlCenter extends UnicastRemoteObject implements IControlCenter
     //TODO: Implement this method
     public void contactRetensionBasinToSetWaterDischarge(String retensionBasinName, int waterDischarge) {
         try {
-            Registry registry = LocateRegistry.getRegistry(tailorHost,tailorPort);
-            ITailor it = (ITailor) registry.lookup(tailorName);
-            //it.setWaterDischarge(retensionBasinName, waterDischarge);
-        } catch (RemoteException | NotBoundException e) {
+            for(IRetensionBasin irb : retensionBasins.keySet()) {
+                if(retensionBasins.get(irb).equals(retensionBasinName)) {
+                    irb.setWaterDischarge(waterDischarge);
+                    System.out.println("Set water discharge for: " + retensionBasinName);
+                    return;
+                }
+            }
+        } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
     }
