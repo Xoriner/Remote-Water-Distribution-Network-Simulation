@@ -1,12 +1,12 @@
 package pl.edu.pwr.mrodak.jp.components.controlcenter;
 
-import interfaces.IControlCenter;
+import pl.edu.pwr.mrodak.jp.components.observer.Observer;
 
 import javax.swing.*;
 import java.awt.*;
 import java.rmi.RemoteException;
 
-public class ControlCenterGUI extends JFrame {
+public class ControlCenterGUI extends JFrame implements Observer {
     private JTextField controlCenterNameField;
     private JTextField tailorNameField;
     private JTextField tailorHostField;
@@ -127,6 +127,7 @@ public class ControlCenterGUI extends JFrame {
         String tailorHost = tailorHostField.getText();
         int tailorPort = Integer.parseInt(tailorPortField.getText());
         controlCenter = new ControlCenter(controlCenterName, tailorName, tailorHost, tailorPort);
+        controlCenter.addObserver(this);
         controlCenter.startControlCenter();
     }
 
@@ -135,6 +136,24 @@ public class ControlCenterGUI extends JFrame {
         String retensionBasinName = retensionBasinNameField.getText();
         int waterDischarge = Integer.parseInt(waterDischargeField.getText());
         controlCenter.contactRetensionBasinToSetWaterDischarge(retensionBasinName, waterDischarge);
+    }
+
+    @Override
+    public void update(String retensionBasinName, String fillStatus, int waterDischarge) {
+        SwingUtilities.invokeLater(() -> {
+            String displayText = retensionBasinName + " - Fill: " + fillStatus + "%, Discharge: " + waterDischarge + "m3/s";
+            boolean updated = false;
+            for (int i = 0; i < listModel.size(); i++) {
+                if (listModel.get(i).startsWith(retensionBasinName)) {
+                    listModel.set(i, displayText);
+                    updated = true;
+                    break;
+                }
+            }
+            if (!updated) {
+                listModel.addElement(displayText);
+            }
+        });
     }
 
 
